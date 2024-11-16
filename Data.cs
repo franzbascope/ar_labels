@@ -12,14 +12,17 @@ public class Data
     public Vector3 position;
     public Quaternion rotation;
     public Vector3 scale;
-    public GameObject model;
+    public string prefabName;
+    public string imageTarget;
 
-    public Data(string name, Vector3 pos, Quaternion rot, Vector3 scl)
+    public Data(string name, Vector3 pos, Quaternion rot, Vector3 scl, string prefab, string imgTarget)
     {
         objName = name;
         position = pos;
         rotation = rot;
         scale = scl;
+        prefabName = prefab;
+        imageTarget = imgTarget;
     }
 }
 
@@ -28,3 +31,5 @@ public class VirtualObjectList
 {
     public List<Data> objectData = new List<Data>();
 }
+
+
