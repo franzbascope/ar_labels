@@ -12,14 +12,28 @@ public class ModifyObject : MonoBehaviour
 
     public void createObject()
     {
+        // call for menu to choose prefab
+        if (prefab != null)
+        {
+            // do nothing, prefab is selected
+        }
+        // default cube for testing
+        else
+        {
+            prefab = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        }
+
         GameObject newObject = Instantiate(prefab);
+
         string objectName;
+
         if (nameInput != null && !string.IsNullOrEmpty(nameInput.text))
             objectName = nameInput.text;
         else
             objectName = "Object" + vObjects.Count; 
 
         newObject.name = objectName;
+
         newObject.transform.position = new Vector3(0, 0, 0);
         newObject.transform.rotation = Quaternion.identity;
         newObject.transform.localScale = Vector3.one;
