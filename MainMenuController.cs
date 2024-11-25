@@ -4,8 +4,18 @@ using UnityEngine;
 
 public class MainMenuController : MonoBehaviour
 {
+    public LoadManager loadManager;
     public void loadPreviewScene()
     {
+        loadManager = FindObjectOfType<LoadManager>();
+        if(loadManager != null)
+        {
+            loadManager.Load();
+        }
+        else
+        {
+            Debug.Log("Load Manager not Found");
+        }
         UnityEngine.SceneManagement.SceneManager.LoadScene("Preview");
     }
 

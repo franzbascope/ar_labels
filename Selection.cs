@@ -5,11 +5,15 @@ using UnityEngine;
 public class Selection : MonoBehaviour
 {
 
-    // public Material selectedMaterial; // If object is selected, change its material to this
+    public Material selectedMaterial; // If object is selected, change its material to this
+
+    public Material selectedObjectOriginalMaterial;
+
     public GameObject selectedObject; // Keep track of the selected object
     // private Material selectedObjectOriginalMaterial; // Remember selected object's original material
     public bool isAnObjectSelected; // Is true if we have a selected object
     private Transform selectedObjectOriginalParentTransform;
+
 
     // Start is called before the first frame update
     void Start()
@@ -31,13 +35,15 @@ public class Selection : MonoBehaviour
         // deselect
         if (isAnObjectSelected)
         {
+            Debug.Log("Object is selected");
             if (getUserTap())
             {
+                Debug.Log("Deselected object");
 
                 // The user no longer wants to select this object. Restore its material.
                 // disabled because one object has multiple materials and its unnessecary tbh
-                // selectedObject.GetComponent<Renderer>().material = selectedObjectOriginalMaterial;
-                
+                selectedObject.GetComponent<Renderer>().material = selectedObjectOriginalMaterial;
+
                 selectedObject.transform.parent = selectedObjectOriginalParentTransform;
 
                 isAnObjectSelected = false;
@@ -55,17 +61,18 @@ public class Selection : MonoBehaviour
             {
                 if (getUserTap())
                 {
+                    Debug.Log("Selected object");
                     selectedObject = hit.collider.gameObject; // Remember the selected object
 
-                    // selectedObjectOriginalMaterial = new Material(selectedObject.GetComponent<Renderer>().material);
-                    // selectedObject.GetComponent<Renderer>().material = selectedMaterial;
+                    selectedObjectOriginalMaterial = new Material(selectedObject.GetComponent<Renderer>().material);
+                    selectedObject.GetComponent<Renderer>().material = selectedMaterial;
 
                     isAnObjectSelected = true;
 
                     selectedObjectOriginalParentTransform = selectedObject.transform.parent;
                     selectedObject.transform.parent = mainCamera.transform;
 
-                    
+
                 }
             }
         }
@@ -79,6 +86,9 @@ public class Selection : MonoBehaviour
         {
             // We have a tap on the screen.
             Touch touch = Input.GetTouch(0);
+            if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began){
+                return true;
+            }
             if (touch.phase == TouchPhase.Began)
             {
                 Vector2 p = touch.position;
@@ -125,4 +135,5 @@ public class Selection : MonoBehaviour
             selectedObject = null;
         }
     }
+    
 }

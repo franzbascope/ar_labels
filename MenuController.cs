@@ -4,8 +4,20 @@ using UnityEngine;
 
 public class MenuController : MonoBehaviour
 {
+    public SaveManager saveManager;
    public void goBackToMainMenu()
    {
-       UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
+        saveManager = FindObjectOfType<SaveManager>();
+
+        if(saveManager != null)
+        {
+            saveManager.Save();
+        }
+        else
+        {
+            Debug.Log("No Save Manager Found");
+        }
+        
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
    }
 }
