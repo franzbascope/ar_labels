@@ -4,21 +4,21 @@ using UnityEngine;
 
 public class Selection : MonoBehaviour
 {
-
-    public Material selectedMaterial; // If object is selected, change its material to this
+    public float rotationSpeed = 50f;
+    public Material selectedMaterial;
 
     public Material selectedObjectOriginalMaterial;
 
-    public GameObject selectedObject; // Keep track of the selected object
-    // private Material selectedObjectOriginalMaterial; // Remember selected object's original material
-    public bool isAnObjectSelected; // Is true if we have a selected object
+    public GameObject selectedObject;
+    public bool isAnObjectSelected;
     private Transform selectedObjectOriginalParentTransform;
 
+    private DataManager dataManager;
 
-    // Start is called before the first frame update
     void Start()
     {
         isAnObjectSelected = false;
+        dataManager = DataManager.Instance;
     }
 
     // Update is called once per frame
@@ -31,22 +31,13 @@ public class Selection : MonoBehaviour
         Ray ray = new Ray(origin, direction);
         RaycastHit hit;
         bool isThereAHit = Physics.Raycast(ray, out hit);
-
+        rotateObjet();
         // deselect
         if (isAnObjectSelected)
         {
-            Debug.Log("Object is selected");
-            if (getUserTap())
+            if (getUserTap() && !checkIfUserIsDragging())
             {
-                Debug.Log("Deselected object");
-
-                // The user no longer wants to select this object. Restore its material.
-                // disabled because one object has multiple materials and its unnessecary tbh
-                selectedObject.GetComponent<Renderer>().material = selectedObjectOriginalMaterial;
-
-                selectedObject.transform.parent = selectedObjectOriginalParentTransform;
-
-                isAnObjectSelected = false;
+                deselectObject();
             }
             else
             {
@@ -78,6 +69,20 @@ public class Selection : MonoBehaviour
         }
     }
 
+    private bool checkIfUserIsDragging()
+    {
+        bool isDragging = false;
+        if (Input.touchCount == 1)
+        {
+            Touch touch = Input.GetTouch(0);
+            if (touch.phase == TouchPhase.Moved)
+            {
+                isDragging = true;
+            }
+        }
+        return isDragging;
+    }
+
     private bool getUserTap()
     {
         bool isTap = false;
@@ -86,7 +91,8 @@ public class Selection : MonoBehaviour
         {
             // We have a tap on the screen.
             Touch touch = Input.GetTouch(0);
-            if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began){
+            if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
+            {
                 return true;
             }
             if (touch.phase == TouchPhase.Began)
@@ -110,7 +116,9 @@ public class Selection : MonoBehaviour
         return isTap;
     }
 
+    // could delete these
     // for selecting object on creation
+    /*
     public void createObjectSelect(GameObject obj)
     {
         // deselect any currently selected objects
@@ -134,6 +142,40 @@ public class Selection : MonoBehaviour
             isAnObjectSelected = false;
             selectedObject = null;
         }
+    }*/
+
+    private void rotateObjet()
+    {
+        if (!isAnObjectSelected)
+        {
+            return;
+        }
+        if (Input.touchCount == 1)
+        {
+            Touch touch = Input.GetTouch(0);
+            if (touch.phase == TouchPhase.Moved)
+            {
+                // Calculating rotation
+                float rotationX = touch.deltaPosition.y * rotationSpeed * Time.deltaTime;
+                float rotationY = -touch.deltaPosition.x * rotationSpeed * Time.deltaTime;
+                // applying rotation to selected object
+                selectedObject.transform.Rotate(Vector3.up, rotationY, Space.World);
+                selectedObject.transform.Rotate(Vector3.right, rotationX, Space.World);
+            }
+        }
     }
-    
+
+    private void deselectObject()
+    {
+        if (isAnObjectSelected)
+        {
+            // The user no longer wants to select this object. Restore its material.
+            // disabled because one object has multiple materials and its unnessecary tbh
+            selectedObject.GetComponent<Renderer>().material = selectedObjectOriginalMaterial;
+            selectedObject.transform.parent = selectedObjectOriginalParentTransform;
+            isAnObjectSelected = false;
+            dataManager.AddObject(selectedObject);
+        }
+    }
+
 }

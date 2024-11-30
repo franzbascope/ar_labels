@@ -1,70 +1,63 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.Remoting.Messaging;
+using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
+using Vuforia;
 
 // attach to save manager empty object in main menu
 public class SaveManager : MonoBehaviour
 {
-    
-    public List<Data> imageTargetList = new List<Data>();
+    private static SaveManager instance;
 
-    // dont destroy on load needed to save scene on exit, moving from main menu removes managers from initial start Awake
+    // make saveManager a singleton
+    public static SaveManager Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindObjectOfType<SaveManager>();
+            }
+            return instance;
+        }
+    }
+
     private void Awake()
     {
-        if(FindObjectsOfType<SaveManager>().Length > 1)
+        if(instance != null && instance != this)
         {
-            Destroy(this);
+            Destroy(gameObject);
+        }
+        else
+        {
+            DontDestroyOnLoad(gameObject);
+            instance = this;
+        }
+    }
+
+    // correctly saving, but is adding (Clone) to the end of object names causing issues with prefabs
+    public void Save(GameObject imageTarget)
+    {
+
+        if (imageTarget == null)
+        {
+            Debug.Log("No Image Targets in Scene");
             return;
         }
 
-        DontDestroyOnLoad(this);
-    }
+        List<Data> saveData = new List<Data>();
 
-    public void Save()
-    {
-        Debug.Log("Save is Starting");
-
-        imageTargetList.Clear();
-
-        // get image targets 
-        var imageTargets = FindObjectsOfType<Vuforia.ImageTargetBehaviour>();
-        Debug.Log($"Found {imageTargets.Length} image targets");
-
-        // iterate through each image target & add to list
-        foreach (var imageTarget in imageTargets)
+        // save data for each image target
+        foreach (Transform child in imageTarget.transform)
         {
-            Debug.Log("Adding Image Target");
-            Data data = new Data
-            {
-                imageTargetName = imageTarget.name,
-                imageTargetPosition = imageTarget.transform.position,
-                imageTargetRotation = imageTarget.transform.rotation,
-                imageTargetScale = imageTarget.transform.localScale,
-                listOfObjects = new List<objectData>()
-            };
+            // find prefab name, remove "(Clone)" so it can load the prefab later
+            string prefabName = child.name.Replace("(Clone)", "").Trim();
 
-            // iterate through each object in image target
-            foreach(Transform child in imageTarget.transform)
-            {
-                Debug.Log("Adding Object");
-                objectData objData = new objectData
-                {
-                    prefabName = child.name,
-                    position = child.position,
-                    rotation = child.rotation,
-                    scale = child.localScale
-                };
-
-                data.listOfObjects.Add(objData);
-            }
-
-            // add to save
-            Debug.Log("Data added to save");
-            imageTargetList.Add(data);
+            saveData.Add(new Data(imageTarget.name, prefabName, child));
         }
 
-        Debug.Log("Save complete");
-        // save data
-        Datamanager.saveData(imageTargetList);
+        Manager.saveData(saveData);
     }
 }

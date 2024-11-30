@@ -1,92 +1,102 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Vuforia;
 
 // attach to load manager empty object in main menu scene
 public class LoadManager : MonoBehaviour
 {
-    public List<Data> imageTargetData;
-    public Transform scene;
-    
-    // create folder or manually assign them from inspector
+    private static LoadManager instance;
     public List<GameObject> prefabs;
+    private Dictionary<string, GameObject> prefabDict;
 
-    // dont destroy on load needed to load scene on enter, moving from main menu removes managers from initial start Awake
+    // make load manager a singleton
+    public static LoadManager Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindObjectOfType<LoadManager>();
+            }
+            return instance;
+        }
+    }
+
     private void Awake()
     {
-        if (FindObjectsOfType<LoadManager>().Length > 1)
+        if(instance != null && instance != this)
         {
-            Destroy(this);
-            return;
-        }
-
-        DontDestroyOnLoad(this);
-    }
-    public void Load()
-    {
-        Debug.Log("Beginning Load");
-        // load data 
-        imageTargetData = Datamanager.LoadData();
-
-        if(imageTargetData == null || imageTargetData.Count == 0)
-        {
-            Debug.Log("No Image Target Data Found");
+            Destroy(gameObject);
         }
         else
         {
-            Debug.Log($"Loaded {imageTargetData.Count} image target(s) from data.");
+            DontDestroyOnLoad(gameObject);
+            instance = this;
         }
 
-        foreach (var data in imageTargetData)
+        // instantiate dictionary
+        prefabDict = new Dictionary<string, GameObject>();
+
+        foreach (var prefab in prefabs) 
         {
-            Debug.Log($"Processing image target: {data.imageTargetName}");
-            // get image target
-            var imageTarget = FindImageTarget(data.imageTargetName);
-            if (imageTarget == null)
-            {
-                Debug.Log("Image Target Not Found");
-            }
-            Debug.Log("Image Target Obtained");
-            imageTarget.transform.position = data.imageTargetPosition;
-            Debug.Log("Position Obtained");
-            imageTarget.transform.rotation = data.imageTargetRotation;
-            Debug.Log("Rotation Obtained");
-            imageTarget.transform.localScale = data.imageTargetScale;
-            Debug.Log("Scale Obtained");
-
-            // if null go to next object
-            if (imageTarget == null)
-                continue;
-
-            foreach (var objectData in data.listOfObjects)
-            {
-                Debug.Log($"Processing object: {objectData.prefabName}");
-
-                GameObject prefab = prefabs.Find(p => p.name == objectData.prefabName);
-                
-                // if null go to next object
-                if (prefab == null)
-                    continue;
-
-                GameObject obj = Instantiate(prefab, imageTarget.transform);
-                obj.transform.localPosition = objectData.position;
-                obj.transform.localRotation = objectData.rotation;
-                obj.transform.localScale = objectData.scale;
-            }
+            prefabDict[prefab.name] = prefab;
         }
-        Debug.Log("Load Complete");
-
     }
-    private Vuforia.ImageTargetBehaviour FindImageTarget(string name)
+
+
+    /*
+     not working correctly because it is not finding the image target
+    switched from imagetargetbehavior to gameobject since thats how its set up in the icons handler
+     */
+    public void Load(GameObject imageTarget)
     {
-        var imageTargets = FindObjectsOfType<Vuforia.ImageTargetBehaviour>();
-        foreach (var target in imageTargets)
+        if (imageTarget == null)
         {
-            if (target.name == name)
-                return target;
+            Debug.LogError("Image Target passed to LoadManager is NULL.");
+            return;
         }
 
-        return null;
+        List<Data> savedData = Manager.LoadData();
+
+        bool clear = false;
+        foreach  (Data data in savedData)
+        {
+            Debug.Log("Checking ImageTarget: " + imageTarget.name + " against saved data: " + data.imageTargetName);
+
+            if (data.imageTargetName == imageTarget.name)
+            {
+                // clear first time image target is checked
+                if (!clear)
+                {
+                    // clear any preexisting data
+                    foreach (Transform child in imageTarget.transform)
+                    {
+                        Destroy(child.gameObject);
+                    }
+                    clear = true;
+                }
+
+                Debug.Log("Loading Child");
+                // instantiate object
+                if (prefabDict.TryGetValue(data.prefabName, out GameObject prefab))
+                {
+                    Debug.Log("Prefab Found");
+                    GameObject obj = Instantiate(prefab, imageTarget.transform);
+                    obj.name = data.prefabName;
+                    obj.transform.localPosition = data.position;
+                    obj.transform.localRotation = data.rotation;
+                    obj.transform.localScale = data.scale;
+                }
+                else
+                {
+                    Debug.Log("Prefab not found");
+                }
+            }
+            else
+            {
+                Debug.Log("No Image Target Found");
+            }
+        }
     }
 }
-

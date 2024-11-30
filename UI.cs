@@ -10,7 +10,6 @@ public class UI : MonoBehaviour
 
     public static UI instance;
 
-    public ModifyObject ModifyObject;
     public SaveManager GlobalSaveManager;
     public LoadManager GlobalLoadManager;
 
@@ -21,19 +20,19 @@ public class UI : MonoBehaviour
 
     private void Awake()
     {
-        if(instance == null)
+        if (instance == null)
         {
             instance = this;
             DontDestroyOnLoad(this);
         }
-        else if(instance != this)
+        else if (instance != this)
         {
             Destroy(gameObject);
         }
-        
+
         SceneManager.sceneLoaded += OnSceneLoaded;
         SceneManager.sceneUnloaded += OnSceneUnloaded;
-        if(GlobalSaveManager == null)
+        if (GlobalSaveManager == null)
         {
             GlobalSaveManager = FindObjectOfType<SaveManager>();
             if (GlobalSaveManager != null)
@@ -41,7 +40,7 @@ public class UI : MonoBehaviour
             else
                 Debug.Log("Did Not Find SaveManager");
         }
-        if(GlobalLoadManager == null)
+        if (GlobalLoadManager == null)
         {
             GlobalLoadManager = FindObjectOfType<LoadManager>();
         }
@@ -50,11 +49,11 @@ public class UI : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if(scene.name == createScene)
+        if (scene.name == createScene)
         {
             Debug.Log("Entering Create");
         }
-        else if(scene.name == previewScene)
+        else if (scene.name == previewScene)
         {
             Debug.Log("Entering Preview");
         }
@@ -76,37 +75,6 @@ public class UI : MonoBehaviour
     private void OnDestroy()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
-        SceneManager.sceneUnloaded -= OnSceneUnloaded;  
-    }
-
-    public void onSaveButtonClicked()
-    {
-        if (GlobalSaveManager != null)
-        {
-            GlobalSaveManager.Save();
-        }
-    }
-
-    public void onLoadButtonClicked()
-    {
-        if (GlobalLoadManager != null)
-        {
-            GlobalLoadManager.Load();
-        }
-    }
-
-    public void onCreateButtonClicked()
-    {
-        ModifyObject.createObject();
-    }
-
-    public void onDeleteButtonClicked()
-    {
-        ModifyObject.deleteObject();
-    }
-
-    public void onEditButtonClicked()
-    {
-        ModifyObject.editObject();
+        SceneManager.sceneUnloaded -= OnSceneUnloaded;
     }
 }
